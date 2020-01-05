@@ -49,6 +49,7 @@ checksum = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
 [[package]]
 name = "bamboo-core"
 version = "1.0.0"
+source = "git+https://github.com/pietgeursen/bamboo-rs?branch=bamboo-commit-388bafe#004eb51c0355714fa383ae9cd6e4d2bd23893282"
 dependencies = [
  "arrayvec 0.4.12",
  "blake2b_simd",
