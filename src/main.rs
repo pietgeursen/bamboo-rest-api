@@ -10,6 +10,7 @@ extern crate diesel;
 
 use serde::Deserialize;
 use rocket_contrib::json::{JsonValue, Json};
+use rocket::config::{Config, Environment};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
@@ -112,7 +113,14 @@ fn main() {
     let res3 = insert_message(&connection, &new_message).unwrap();
     println!("got res {}", res3);
 
-    rocket::ignite()
+    let port = env::var("PORT").unwrap_or(8000.to_string()).parse::<u16>().unwrap();
+
+    let config = Config::build(Environment::Production)
+        .address("0.0.0.0")
+        .port(port)
+        .finalize().unwrap();
+
+    rocket::custom(config)
         .mount("/hello", routes![hello])
         .mount("/feeds", routes![feeds, feeds_key, feeds_key_feed_id_seq, feeds_post])
         .launch();
