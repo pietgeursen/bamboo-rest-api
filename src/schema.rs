@@ -23,4 +23,8 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(authors, keys, messages,);
+allow_tables_to_appear_in_same_query!(
+    authors,
+    keys,
+    messages,
+);
