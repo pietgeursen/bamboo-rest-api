@@ -10,7 +10,7 @@ extern crate diesel;
 
 use bamboo_core::entry::decode;
 use bamboo_core::YamfSignatory;
-use bamboo_core::{lipmaa, verify, Entry as BambooEntry};
+use bamboo_core::{lipmaa, verify};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
@@ -35,14 +35,6 @@ pub fn establish_connection() -> Arc<Mutex<PgConnection>> {
     let connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
     Arc::new(Mutex::new(connection))
-}
-
-/// Gets a list of public keys we have feeds of.
-#[get("/")]
-fn feeds() -> JsonValue {
-    json!({
-        "feeds": "a feed"
-    })
 }
 
 #[derive(Deserialize)]
@@ -73,19 +65,33 @@ fn feeds_post(
             .map_err(|e| json!({"errorUpsertingAuthorKey": e.to_string()}))?,
     };
 
-    let previous_msg = get_message(&connection, author_key, decoded.seq_num as i32 - 1, decoded.log_id as i32)
-        .map_err(|e| json!({"errorInsertingMessage": e.to_string()}))?
-        .map(|msg| msg.entry)
-        .map(|msg| decode_hex(msg).unwrap());
-        
-    let lipmaa_msg = get_message(&connection, author_key, lipmaa(decoded.seq_num) as i32, decoded.log_id as i32)
-        .map_err(|e| json!({"errorInsertingMessage": e.to_string()}))?
-        .map(|msg| msg.entry)
-        .map(|msg| decode_hex(msg).unwrap());
+    let previous_msg = get_message(
+        &connection,
+        author_key,
+        decoded.seq_num as i32 - 1,
+        decoded.log_id as i32,
+    )
+    .map_err(|e| json!({"errorGettingPreviousMessage": e.to_string()}))?
+    .map(|msg| msg.entry)
+    .map(|msg| decode_hex(msg).unwrap());
 
-    verify(&entry_bytes, Some(&payload_bytes), lipmaa_msg.as_deref(), previous_msg.as_deref())
-        .map_err(|e| json!({ "errorVerifyingEntry": e }))?;
+    let lipmaa_msg = get_message(
+        &connection,
+        author_key,
+        lipmaa(decoded.seq_num) as i32,
+        decoded.log_id as i32,
+    )
+    .map_err(|e| json!({"errorGettingLipmaaLink": e.to_string()}))?
+    .map(|msg| msg.entry)
+    .map(|msg| decode_hex(msg).unwrap());
 
+    verify(
+        &entry_bytes,
+        Some(&payload_bytes),
+        lipmaa_msg.as_deref(),
+        previous_msg.as_deref(),
+    )
+    .map_err(|e| json!({ "errorVerifyingEntry": e }))?;
 
     let new_message = NewMessage {
         seq: decoded.seq_num as i32,
@@ -105,7 +111,16 @@ fn feeds_post(
     }))
 }
 
-/// Gets a list of
+/// Gets a list of pub keys
+#[get("/")]
+fn feeds(state: State<Arc<Mutex<PgConnection>>>) -> Result<JsonValue, JsonValue> {
+    let connection = state.lock().unwrap();
+    let authors =
+        get_authors(&connection).map_err(|e| json!({"errorGettingAuthors": e.to_string()}))?;
+    Ok(json!({ "authors": authors }))
+}
+
+/// Gets a list of feed ids by this pub key
 #[get("/<pub_key>")]
 fn feeds_key(pub_key: String) -> JsonValue {
     json!({
@@ -113,47 +128,63 @@ fn feeds_key(pub_key: String) -> JsonValue {
     })
 }
 
+/// Gets all the messages by this pub_key published to this feed id
 #[get("/<pub_key>/<feed_id>")]
-fn feeds_key_feed_id(pub_key: String, feed_id: String) -> JsonValue {
-    json!({
-        "feeds": "a feed"
-    })
+fn feeds_key_feed_id(
+    state: State<Arc<Mutex<PgConnection>>>,
+    pub_key: String,
+    feed_id: i32,
+) -> Result<JsonValue, JsonValue> {
+    let connection = state.lock().unwrap();
+
+    let author_id = get_author(&connection, &pub_key)
+        .map_err(|e| json!({"errorGettingAuthorId": e.to_string()}))?;
+    let messages = get_messages(&connection, author_id, feed_id)
+        .map_err(|e| json!({"errorGettingAuthors": e.to_string()}))?
+        .iter()
+        .map(|msg| {
+            let decoded_bytes = decode_hex(&msg.entry).unwrap();
+            json!({
+                "decoded": decode(&decoded_bytes).unwrap(),
+                "encoded": &msg.entry,
+                "payload": &msg.payload
+            })
+        })
+        .collect::<Vec<_>>();
+
+    Ok(json!({ "messages": messages }))
 }
 
+/// Gets the message
 #[get("/<pub_key>/<feed_id>/<seq>")]
-fn feeds_key_feed_id_seq(pub_key: String, feed_id: String, seq: u64) -> JsonValue {
-    json!({
-        "feeds": "a feed"
-    })
-}
+fn feeds_key_feed_id_seq(
+    state: State<Arc<Mutex<PgConnection>>>,
+    pub_key: String,
+    feed_id: i32,
+    seq: i32,
+) -> Result<JsonValue, JsonValue> {
+    let connection = state.lock().unwrap();
 
-#[get("/<name>/<age>")]
-fn hello(name: String, age: u8) -> String {
-    format!("Hello, {} year old named {}!", age, name)
+    let author_id = get_author(&connection, &pub_key)
+        .map_err(|e| json!({"errorGettingAuthorId": e.to_string()}))?;
+
+    let msg = get_message(&connection, author_id, seq, feed_id)
+        .map_err(|e| json!({"errorGettingAuthorId": e.to_string()}))?
+        .ok_or(json!({"errorNoAuthorFound": true}))?;
+
+    let decoded_bytes = decode_hex(&msg.entry).unwrap();
+
+    Ok(json!({
+        "message": {
+            "decoded": decode(&decoded_bytes).unwrap(),
+            "encoded": &msg.entry,
+            "payload": &msg.payload
+        }
+    }))
 }
 
 fn main() {
     let connection = establish_connection();
-
-    //let res = upsert_author(&connection., "pietKey").unwrap();
-
-    //println!("got res {}", res);
-
-    //let res2 = upsert_key(&connection, "key").unwrap();
-
-    //println!("got res {}", res2);
-
-    //    let new_message = NewMessage {
-    //        seq: 1,
-    //        key_id: res2,
-    //        author_id: res,
-    //        feed_id: 1,
-    //        entry: "I'm the entry.",
-    //        payload: "I'm the payload",
-    //    };
-    //
-    //    let res3 = insert_message(&connection, &new_message).unwrap();
-    //    println!("got res {}", res3);
 
     let port = env::var("PORT")
         .unwrap_or(8000.to_string())
@@ -168,10 +199,15 @@ fn main() {
 
     rocket::custom(config)
         .manage(connection)
-        .mount("/hello", routes![hello])
         .mount(
             "/feeds",
-            routes![feeds, feeds_key, feeds_key_feed_id_seq, feeds_post],
+            routes![
+                feeds,
+                feeds_key,
+                feeds_key_feed_id,
+                feeds_key_feed_id_seq,
+                feeds_post
+            ],
         )
         .launch();
 }

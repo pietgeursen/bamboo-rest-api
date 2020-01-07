@@ -16,6 +16,20 @@ pub struct NewAuthor<'a> {
     pub author: &'a str,
 }
 
+pub fn get_authors(connection: &PgConnection) -> Result<Vec<String>, diesel::result::Error> {
+    authors.select(author).load(connection)
+}
+
+pub fn get_author(
+    connection: &PgConnection,
+    author_str: &str,
+) -> Result<i32, diesel::result::Error> {
+    authors
+        .filter(author.eq(author_str))
+        .select(id)
+        .first(connection)
+}
+
 pub fn upsert_author(
     connection: &PgConnection,
     author_key: &str,
@@ -27,8 +41,5 @@ pub fn upsert_author(
         .returning(id)
         .execute(connection)?;
 
-    authors
-        .select(id)
-        .filter(author.eq(author_key))
-        .first(connection)
+    get_author(connection, author_key)
 }

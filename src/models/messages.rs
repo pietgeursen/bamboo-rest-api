@@ -33,7 +33,15 @@ pub fn insert_message(
         .do_nothing()
         .execute(connection)
 }
-
+pub fn get_messages(
+    connection: &PgConnection,
+    author: i32,
+    feed: i32,
+) -> Result<Vec<Message>, diesel::result::Error> {
+    messages
+        .filter(author_id.eq(author).and(feed_id.eq(feed)))
+        .load::<Message>(connection)
+}
 pub fn get_message(
     connection: &PgConnection,
     author: i32,
