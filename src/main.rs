@@ -26,7 +26,6 @@ pub mod models;
 pub mod schema;
 
 use models::authors::*;
-use models::keys::*;
 use models::messages::*;
 
 pub fn establish_connection() -> Arc<Mutex<PgConnection>> {
@@ -60,34 +59,36 @@ fn feeds_post(
     entry: Json<Entry>,
     state: State<Arc<Mutex<PgConnection>>>,
 ) -> Result<JsonValue, JsonValue> {
-
     let entry_bytes = decode_hex(&entry.encoded_entry)
         .map_err(|e| json!({"errorDecodingEntryFromHexString": e.to_string()}))?;
     let payload_bytes = decode_hex(&entry.encoded_payload)
         .map_err(|e| json!({"errorDecodingPayloadFromHexString": e.to_string()}))?;
 
     let decoded = decode(&entry_bytes).map_err(|e| json!({ "errorDecodingEntry": e }))?;
-
-    // TODO get the lipmaa and backlink entries
-
-    verify(&entry_bytes, Some(&payload_bytes), None, None)
-        .map_err(|e|{
-            json!({"errorVerifyingEntry": e})
-        })?; 
-
     let author = &decoded.author;
-    let connection = state.lock().unwrap();
 
+    let connection = state.lock().unwrap();
     let author_key = match author {
-        YamfSignatory::Ed25519(pub_key, _) => {
-            upsert_author(&connection, &encode_hex(pub_key))
-                .map_err(|e| json!({"errorUpsertingAuthorKey": e.to_string()}))?
-        }
+        YamfSignatory::Ed25519(pub_key, _) => upsert_author(&connection, &encode_hex(pub_key))
+            .map_err(|e| json!({"errorUpsertingAuthorKey": e.to_string()}))?,
     };
+
+    let previous_msg = get_message(&connection, author_key, decoded.seq_num as i32 - 1, decoded.log_id as i32)
+        .map_err(|e| json!({"errorInsertingMessage": e.to_string()}))?
+        .map(|msg| msg.entry)
+        .map(|msg| decode_hex(msg).unwrap());
+        
+    let lipmaa_msg = get_message(&connection, author_key, lipmaa(decoded.seq_num) as i32, decoded.log_id as i32)
+        .map_err(|e| json!({"errorInsertingMessage": e.to_string()}))?
+        .map(|msg| msg.entry)
+        .map(|msg| decode_hex(msg).unwrap());
+
+    verify(&entry_bytes, Some(&payload_bytes), lipmaa_msg.as_deref(), previous_msg.as_deref())
+        .map_err(|e| json!({ "errorVerifyingEntry": e }))?;
+
 
     let new_message = NewMessage {
         seq: decoded.seq_num as i32,
-        key_id: 1, // TODO
         author_id: author_key,
         feed_id: decoded.log_id as i32,
         entry: &entry.encoded_entry,
@@ -95,9 +96,7 @@ fn feeds_post(
     };
 
     insert_message(&connection, &new_message)
-        .map_err(|e|{
-            json!({"errorInsertingMessage": e.to_string()})
-        })?;
+        .map_err(|e| json!({"errorInsertingMessage": e.to_string()}))?;
 
     Ok(json!({
         "entry": entry.encoded_entry,

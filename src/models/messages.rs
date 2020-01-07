@@ -6,20 +6,17 @@ use diesel::prelude::*;
 
 #[derive(Queryable)]
 pub struct Message {
-    pub id: i64,
     pub seq: i32,
-    pub key_id: i32,
     pub author_id: i32,
     pub feed_id: i32,
     pub entry: String,
-    pub payload: String,
+    pub payload: Option<String>,
 }
 
 #[derive(Insertable)]
 #[table_name = "messages"]
 pub struct NewMessage<'a> {
     pub seq: i32,
-    pub key_id: i32,
     pub author_id: i32,
     pub feed_id: i32,
     pub entry: &'a str,
@@ -35,4 +32,19 @@ pub fn insert_message(
         .on_conflict(on_constraint("messages_pkey"))
         .do_nothing()
         .execute(connection)
+}
+
+pub fn get_message(
+    connection: &PgConnection,
+    author: i32,
+    sequence: i32,
+    feed: i32,
+) -> Result<Option<Message>, diesel::result::Error> {
+    messages
+        .filter(
+            seq.eq(sequence)
+                .and(author_id.eq(author).and(feed_id.eq(feed))),
+        )
+        .first::<Message>(connection)
+        .optional()
 }

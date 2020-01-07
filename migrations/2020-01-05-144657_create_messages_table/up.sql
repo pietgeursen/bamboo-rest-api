@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS messages (
   PRIMARY KEY(author_id, feed_id, seq),
   seq INTEGER NOT NULL,
-  key_id INTEGER UNIQUE NOT NULL,
   author_id INTEGER NOT NULL,
   feed_id INTEGER NOT NULL,
   entry TEXT NOT NULL,
