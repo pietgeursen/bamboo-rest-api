@@ -33,7 +33,7 @@ pub fn establish_connection() -> Arc<Mutex<PgConnection>> {
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let connection = PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url));
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
     Arc::new(Mutex::new(connection))
 }
 
@@ -175,7 +175,7 @@ fn feeds_key_feed_id_seq(
 
     let msg = get_message(&connection, author_id, seq, feed_id)
         .map_err(|e| json!({"errorGettingAuthorId": e.to_string()}))?
-        .ok_or(json!({"errorNoAuthorFound": true}))?;
+        .ok_or_else(||json!({"errorNoAuthorFound": true}))?;
 
     let decoded_bytes = decode_hex(&msg.entry).unwrap();
 
@@ -192,7 +192,7 @@ fn main() {
     let connection = establish_connection();
 
     let port = env::var("PORT")
-        .unwrap_or(8000.to_string())
+        .unwrap_or_else(|_|8000.to_string())
         .parse::<u16>()
         .unwrap();
 
