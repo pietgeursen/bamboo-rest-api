@@ -1,5 +1,6 @@
 use crate::schema::authors;
 use crate::schema::authors::dsl::*;
+use crate::schema::messages::dsl::*;
 use diesel::pg::upsert::*;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -28,6 +29,18 @@ pub fn get_author(
         .filter(author.eq(author_str))
         .select(id)
         .first(connection)
+}
+
+pub fn get_author_feed_ids(
+    connection: &PgConnection,
+    author_str: &str,
+) -> Result<Vec<i32>, diesel::result::Error> {
+    authors
+        .inner_join(messages.on(id.eq(author_id)))
+        .select(feed_id)
+        .distinct()
+        .filter(author.eq(author_str))
+        .load::<i32>(connection)
 }
 
 pub fn upsert_author(

@@ -122,10 +122,15 @@ fn feeds(state: State<Arc<Mutex<PgConnection>>>) -> Result<JsonValue, JsonValue>
 
 /// Gets a list of feed ids by this pub key
 #[get("/<pub_key>")]
-fn feeds_key(pub_key: String) -> JsonValue {
-    json!({
-        "feeds": "a feed"
-    })
+fn feeds_key(
+    state: State<Arc<Mutex<PgConnection>>>,
+    pub_key: String,
+) -> Result<JsonValue, JsonValue> {
+    let connection = state.lock().unwrap();
+    let feed_ids = get_author_feed_ids(&connection, &pub_key)
+        .map_err(|e| json!({"errorGettingAuthorFeeds": e.to_string()}))?;
+
+    Ok(json!({ "feedIds": feed_ids }))
 }
 
 /// Gets all the messages by this pub_key published to this feed id
