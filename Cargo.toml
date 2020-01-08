@@ -9,9 +9,12 @@ edition = "2018"
 [dependencies]
 bamboo-core = {git = "https://github.com/pietgeursen/bamboo-rs", branch = "bamboo-commit-388bafe"}
 rocket = "0.4.2"
+rocket_okapi = "0.3.1"
 diesel = { version = "1.0.0", features = ["postgres"] }
 dotenv = "0.9.0"
 hex = "0.4"
+okapi = "0.3.0"
+schemars = "0.6.1"
 serde = { version = "1.0", features = ["derive"] }
 [dependencies.rocket_contrib]
 version = "0.4.2"
