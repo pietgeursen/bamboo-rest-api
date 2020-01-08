@@ -1,9 +1,9 @@
 -- Your SQL goes here
 CREATE TABLE IF NOT EXISTS messages (
   PRIMARY KEY(author_id, feed_id, seq),
-  seq INTEGER NOT NULL,
+  seq BIGINT NOT NULL,
   author_id INTEGER NOT NULL,
-  feed_id INTEGER NOT NULL,
+  feed_id BIGINT NOT NULL,
   entry TEXT NOT NULL,
   payload TEXT
 );

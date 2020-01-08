@@ -6,9 +6,9 @@ use diesel::prelude::*;
 
 #[derive(Queryable)]
 pub struct Message {
-    pub seq: i32,
+    pub seq: i64,
     pub author_id: i32,
-    pub feed_id: i32,
+    pub feed_id: i64,
     pub entry: String,
     pub payload: Option<String>,
 }
@@ -16,9 +16,9 @@ pub struct Message {
 #[derive(Insertable)]
 #[table_name = "messages"]
 pub struct NewMessage<'a> {
-    pub seq: i32,
+    pub seq: i64,
     pub author_id: i32,
-    pub feed_id: i32,
+    pub feed_id: i64,
     pub entry: &'a str,
     pub payload: &'a str,
 }
@@ -37,7 +37,7 @@ pub fn insert_message(
 pub fn get_messages(
     connection: &PgConnection,
     author: i32,
-    feed: i32,
+    feed: i64,
 ) -> Result<Vec<Message>, diesel::result::Error> {
     messages
         .filter(author_id.eq(author).and(feed_id.eq(feed)))
@@ -47,8 +47,8 @@ pub fn get_messages(
 pub fn get_message(
     connection: &PgConnection,
     author: i32,
-    sequence: i32,
-    feed: i32,
+    sequence: i64,
+    feed: i64,
 ) -> Result<Option<Message>, diesel::result::Error> {
     messages
         .filter(

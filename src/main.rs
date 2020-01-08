@@ -68,8 +68,8 @@ fn feeds_post(
     let previous_msg = get_message(
         &connection,
         author_key,
-        decoded.seq_num as i32 - 1,
-        decoded.log_id as i32,
+        decoded.seq_num as i64 - 1,
+        decoded.log_id as i64,
     )
     .map_err(|e| json!({"errorGettingPreviousMessage": e.to_string()}))?
     .map(|msg| msg.entry)
@@ -78,8 +78,8 @@ fn feeds_post(
     let lipmaa_msg = get_message(
         &connection,
         author_key,
-        lipmaa(decoded.seq_num) as i32,
-        decoded.log_id as i32,
+        lipmaa(decoded.seq_num) as i64,
+        decoded.log_id as i64,
     )
     .map_err(|e| json!({"errorGettingLipmaaLink": e.to_string()}))?
     .map(|msg| msg.entry)
@@ -94,9 +94,9 @@ fn feeds_post(
     .map_err(|e| json!({ "errorVerifyingEntry": e }))?;
 
     let new_message = NewMessage {
-        seq: decoded.seq_num as i32,
+        seq: decoded.seq_num as i64,
         author_id: author_key,
-        feed_id: decoded.log_id as i32,
+        feed_id: decoded.log_id as i64,
         entry: &entry.encoded_entry,
         payload: &entry.encoded_payload,
     };
@@ -138,7 +138,7 @@ fn feeds_key(
 fn feeds_key_feed_id(
     state: State<Arc<Mutex<PgConnection>>>,
     pub_key: String,
-    feed_id: i32,
+    feed_id: i64,
 ) -> Result<JsonValue, JsonValue> {
     let connection = state.lock().unwrap();
 
@@ -165,8 +165,8 @@ fn feeds_key_feed_id(
 fn feeds_key_feed_id_seq(
     state: State<Arc<Mutex<PgConnection>>>,
     pub_key: String,
-    feed_id: i32,
-    seq: i32,
+    feed_id: i64,
+    seq: i64,
 ) -> Result<JsonValue, JsonValue> {
     let connection = state.lock().unwrap();
 

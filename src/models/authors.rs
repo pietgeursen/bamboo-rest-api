@@ -7,7 +7,7 @@ use diesel::prelude::*;
 
 #[derive(Queryable)]
 pub struct Author {
-    pub id: i64,
+    pub id: i32,
     pub author: String,
 }
 
@@ -34,13 +34,13 @@ pub fn get_author(
 pub fn get_author_feed_ids(
     connection: &PgConnection,
     author_str: &str,
-) -> Result<Vec<i32>, diesel::result::Error> {
+) -> Result<Vec<i64>, diesel::result::Error> {
     authors
         .inner_join(messages.on(id.eq(author_id)))
         .select(feed_id)
         .distinct()
         .filter(author.eq(author_str))
-        .load::<i32>(connection)
+        .load::<i64>(connection)
 }
 
 pub fn upsert_author(
