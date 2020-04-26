@@ -176,9 +176,9 @@ checksum = "995a44c877f9212528ccc74b21a232f66ad69001e40ede5bcee2ac9ef2657120"
 
 [[package]]
 name = "cookie"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99be24cfcf40d56ed37fd11c2123be833959bbc5bddecb46e1c2e442e15fa3e0"
+checksum = "d9fac5e7bdefb6160fb181ee0eaa6f96704b625c70e6d61c465cb35750a4ea12"
 dependencies = [
  "base64 0.9.3",
  "ring",
@@ -387,6 +387,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glob"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -557,12 +563,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 
 [[package]]
-name = "maybe-uninit"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
-
-[[package]]
 name = "memchr"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -668,9 +668,9 @@ dependencies = [
 
 [[package]]
 name = "okapi"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a62e8c05972b7b21c71e66fa99e61e36fc6f771c649a0592f0aeef56f30f9ec"
+checksum = "e969ac53c86c158761836e746be203f4cfd774445bd8aff4bfdcf8e42dd93891"
 dependencies = [
  "schemars",
  "serde",
@@ -841,9 +841,9 @@ dependencies = [
 
 [[package]]
 name = "rocket"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42c1e9deb3ef4fa430d307bfccd4231434b707ca1328fae339c43ad1201cc6f7"
+checksum = "e20afbad214b001cabbe31dd270b48b3be980a7153ee2ed8392e241f856d651b"
 dependencies = [
  "atty",
  "base64 0.10.1",
@@ -862,11 +862,12 @@ dependencies = [
 
 [[package]]
 name = "rocket_codegen"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79aa1366f9b2eccddc05971e17c5de7bb75a5431eb12c2b5c66545fd348647f4"
+checksum = "2108b35e2c3a35759d3f16cc3002ece05523191d884d3ad6523693fd43324dde"
 dependencies = [
  "devise",
+ "glob",
  "indexmap",
  "quote 0.6.13",
  "rocket_http",
@@ -876,9 +877,9 @@ dependencies = [
 
 [[package]]
 name = "rocket_contrib"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0fa5c1392135adc0f96a02ba150ac4c765e27c58dbfd32aa40678e948f6e56f"
+checksum = "a10e7471279bc2d4a21b6fddd9589016bb119e6fbb547b216dd54ef237f28341"
 dependencies = [
  "log 0.4.8",
  "notify",
@@ -889,16 +890,16 @@ dependencies = [
 
 [[package]]
 name = "rocket_http"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1391457ee4e80b40d4b57fa5765c0f2836b20d73bcbee4e3f35d93cf3b80817"
+checksum = "6ce8ca76247376ea21cf271af0f95e3f2014596e3e4c7cc04e44ee6242a40ff2"
 dependencies = [
  "cookie",
  "hyper",
  "indexmap",
  "pear",
  "percent-encoding",
- "smallvec 0.6.13",
+ "smallvec",
  "state",
  "time",
  "unicode-xid 0.1.0",
@@ -906,9 +907,9 @@ dependencies = [
 
 [[package]]
 name = "rocket_okapi"
-version = "0.3.1"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bad9010fddf7e92613ece737c970fd96cd242bd658ef13abb35474d48d5ce0d"
+checksum = "f82d90a33f09d580a1efaebf1bef4e38b1711e86437c2795e88875ac88c9b6c4"
 dependencies = [
  "okapi",
  "rocket",
@@ -921,9 +922,9 @@ dependencies = [
 
 [[package]]
 name = "rocket_okapi_codegen"
-version = "0.3.1"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49c3bc68c7fe841f1cadd1628a76ece9940fb4c09f15c172010bf504b6a63584"
+checksum = "1be22909d00b4399e9a5ea48eca3ce9f869946adc170408d22e0ac2a51d69241"
 dependencies = [
  "darling",
  "proc-macro2 1.0.7",
@@ -955,9 +956,9 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "0.6.5"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07569773d6aaf3324812c6572244aec08521b64ce056f2be3b5cc135fb63caec"
+checksum = "fc8d860f536893cd145325390daa91236804583290199af0a0fd19e721740630"
 dependencies = [
  "schemars_derive",
  "serde",
@@ -966,9 +967,9 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "0.6.5"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38535ecef477d8495dc6c288e876c03c4428b8141ffa57803111348cf14230a9"
+checksum = "30c2964f120c4a429d6a731789f04903e6e8be42480ca8e228537c7c4c19e2a7"
 dependencies = [
  "proc-macro2 1.0.7",
  "quote 1.0.2",
@@ -1035,15 +1036,6 @@ name = "slab"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
-
-[[package]]
-name = "smallvec"
-version = "0.6.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
-dependencies = [
- "maybe-uninit",
-]
 
 [[package]]
 name = "smallvec"
@@ -1186,7 +1178,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b561e267b2326bb4cebfc0ef9e68355c7abe6c6f522aeac2f5bf95d56c59bdcf"
 dependencies = [
- "smallvec 1.1.0",
+ "smallvec",
 ]
 
 [[package]]
