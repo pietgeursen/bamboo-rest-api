@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bamboo-core = {git = "https://github.com/pietgeursen/bamboo-rs", rev = "388579"}
+bamboo-core = {git = "https://github.com/pietgeursen/bamboo-rs", rev = "38380d06b56"}
 rocket = "0.4.4"
 rocket_okapi = "0.4.1"
 diesel = { version = "1.0.0", features = ["postgres"] }

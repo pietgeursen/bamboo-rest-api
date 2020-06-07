@@ -40,7 +40,7 @@ checksum = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
 [[package]]
 name = "bamboo-core"
 version = "1.0.0"
-source = "git+https://github.com/pietgeursen/bamboo-rs?rev=388579#388579f3df3f97963406a5be30eefffc325773af"
+source = "git+https://github.com/pietgeursen/bamboo-rs?rev=38380d06b56#38380d06b56bcd9bd334156e12cd1cb4fcdc8089"
 dependencies = [
  "arrayvec",
  "blake2b_simd",
@@ -55,7 +55,7 @@ dependencies = [
 
 [[package]]
 name = "bamboo-rest"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bamboo-core",
  "diesel",
