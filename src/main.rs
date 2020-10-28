@@ -11,7 +11,6 @@ extern crate dotenv;
 extern crate diesel;
 
 use bamboo_core::entry::decode;
-use bamboo_core::YamfSignatory;
 use bamboo_core::{lipmaa, verify};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -70,10 +69,8 @@ fn feeds_post(
     let author = &decoded.author;
 
     let connection = state.lock().unwrap();
-    let author_key = match author {
-        YamfSignatory::Ed25519(pub_key, _) => upsert_author(&connection, &encode_hex(pub_key))
-            .map_err(|e| json!({"errorUpsertingAuthorKey": e.to_string()}))?,
-    };
+    let author_key = upsert_author(&connection, &encode_hex(author))
+        .map_err(|e| json!({"errorUpsertingAuthorKey": e.to_string()}))?;
 
     let previous_msg = get_message(
         &connection,
