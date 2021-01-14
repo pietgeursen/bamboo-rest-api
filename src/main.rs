@@ -214,8 +214,9 @@ fn main() {
         .unwrap();
 
     let swagger_config = rocket_okapi::swagger_ui::SwaggerUIConfig {
-        url: Some("/openapi.json".to_owned()),
-        urls: None,
+        url: "/openapi.json".to_owned(),
+        urls: vec![],
+        ..Default::default()
     };
 
     let swagger_route = rocket_okapi::swagger_ui::make_swagger_ui(&swagger_config);
