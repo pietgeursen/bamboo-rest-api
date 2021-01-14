@@ -10,8 +10,8 @@ extern crate dotenv;
 #[macro_use]
 extern crate diesel;
 
-use bamboo_core::entry::decode;
-use bamboo_core::{lipmaa, verify};
+use bamboo_rs_core::entry::decode;
+use bamboo_rs_core::{lipmaa, verify};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
@@ -65,7 +65,7 @@ fn feeds_post(
     let payload_bytes = decode_hex(&entry.encoded_payload)
         .map_err(|e| json!({"errorDecodingPayloadFromHexString": e.to_string()}))?;
 
-    let decoded = decode(&entry_bytes).map_err(|e| json!({ "errorDecodingEntry": e }))?;
+    let decoded = decode(&entry_bytes).map_err(|e| json!({ "errorDecodingEntry": e.to_string() }))?;
     let author = &decoded.author;
 
     let connection = state.lock().unwrap();
@@ -98,7 +98,7 @@ fn feeds_post(
         lipmaa_msg.as_deref(),
         previous_msg.as_deref(),
     )
-    .map_err(|e| json!({ "errorVerifyingEntry": e }))?;
+    .map_err(|e| json!({ "errorVerifyingEntry": e.to_string() }))?;
 
     let new_message = NewMessage {
         seq: decoded.seq_num as i64,
