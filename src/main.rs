@@ -2,10 +2,6 @@
 
 #[macro_use]
 extern crate rocket;
-#[macro_use]
-extern crate rocket_okapi;
-#[macro_use]
-extern crate rocket_contrib;
 extern crate dotenv;
 #[macro_use]
 extern crate diesel;
@@ -16,10 +12,13 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenv::dotenv;
 use hex::{decode as decode_hex, encode as encode_hex};
-use rocket::config::{Config, Environment};
+use rocket::config::Config;
+use rocket::log::LogLevel;
+use rocket::serde::json::{json, Json, Value as JsonValue};
 use rocket::State;
-use rocket_contrib::json::{Json, JsonValue};
-use schemars::JsonSchema;
+use rocket_okapi::okapi::schemars;
+use rocket_okapi::okapi::schemars::JsonSchema;
+use rocket_okapi::{openapi, openapi_get_routes};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::sync::{Arc, Mutex};
@@ -58,14 +57,15 @@ struct MyResult {
 #[post("/", data = "<entry>")]
 fn feeds_post(
     entry: Json<Entry>,
-    state: State<Arc<Mutex<PgConnection>>>,
+    state: &State<Arc<Mutex<PgConnection>>>,
 ) -> Result<JsonValue, JsonValue> {
     let entry_bytes = decode_hex(&entry.encoded_entry)
         .map_err(|e| json!({"errorDecodingEntryFromHexString": e.to_string()}))?;
     let payload_bytes = decode_hex(&entry.encoded_payload)
         .map_err(|e| json!({"errorDecodingPayloadFromHexString": e.to_string()}))?;
 
-    let decoded = decode(&entry_bytes).map_err(|e| json!({ "errorDecodingEntry": e.to_string() }))?;
+    let decoded =
+        decode(&entry_bytes).map_err(|e| json!({ "errorDecodingEntry": e.to_string() }))?;
     let author = &decoded.author;
 
     let connection = state.lock().unwrap();
@@ -121,7 +121,7 @@ fn feeds_post(
 /// Gets a list of pub keys
 #[openapi]
 #[get("/")]
-fn feeds(state: State<Arc<Mutex<PgConnection>>>) -> Result<JsonValue, JsonValue> {
+fn feeds(state: &State<Arc<Mutex<PgConnection>>>) -> Result<JsonValue, JsonValue> {
     let connection = state.lock().unwrap();
     let authors =
         get_authors(&connection).map_err(|e| json!({"errorGettingAuthors": e.to_string()}))?;
@@ -132,7 +132,7 @@ fn feeds(state: State<Arc<Mutex<PgConnection>>>) -> Result<JsonValue, JsonValue>
 #[openapi]
 #[get("/<pub_key>")]
 fn feeds_key(
-    state: State<Arc<Mutex<PgConnection>>>,
+    state: &State<Arc<Mutex<PgConnection>>>,
     pub_key: String,
 ) -> Result<JsonValue, JsonValue> {
     let connection = state.lock().unwrap();
@@ -146,7 +146,7 @@ fn feeds_key(
 #[openapi]
 #[get("/<pub_key>/<feed_id>")]
 fn feeds_key_feed_id(
-    state: State<Arc<Mutex<PgConnection>>>,
+    state: &State<Arc<Mutex<PgConnection>>>,
     pub_key: String,
     feed_id: i64,
 ) -> Result<JsonValue, JsonValue> {
@@ -174,7 +174,7 @@ fn feeds_key_feed_id(
 #[openapi]
 #[get("/<pub_key>/<feed_id>/<seq>")]
 fn feeds_key_feed_id_seq(
-    state: State<Arc<Mutex<PgConnection>>>,
+    state: &State<Arc<Mutex<PgConnection>>>,
     pub_key: String,
     feed_id: i64,
     seq: i64,
@@ -199,7 +199,8 @@ fn feeds_key_feed_id_seq(
     }))
 }
 
-fn main() {
+#[launch]
+fn rocket() -> _ {
     let connection = establish_connection();
 
     let port = env::var("PORT")
@@ -207,11 +208,11 @@ fn main() {
         .parse::<u16>()
         .unwrap();
 
-    let config = Config::build(Environment::Development)
-        .address("0.0.0.0")
-        .port(port)
-        .finalize()
-        .unwrap();
+    let mut config = Config::debug_default();
+
+    config.address = [0, 0, 0, 0].into();
+    config.port = port;
+    config.keep_alive = 10;
 
     let swagger_config = rocket_okapi::swagger_ui::SwaggerUIConfig {
         url: "/openapi.json".to_owned(),
@@ -225,14 +226,13 @@ fn main() {
         .manage(connection)
         .mount(
             "/",
-            routes_with_openapi![
+            openapi_get_routes![
                 feeds,
                 feeds_key,
                 feeds_key_feed_id,
                 feeds_key_feed_id_seq,
-                feeds_post
+                feeds_post,
             ],
         )
         .mount("/swagger", swagger_route)
-        .launch();
 }
